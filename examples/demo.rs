@@ -41,10 +41,10 @@ fn main() {
     let mut imgui = imgui::Context::create();
     imgui.set_ini_filename(None);
 
-    let mut imgui_sdl2 = imgui_sdl2::ImguiSdl2::new(&mut imgui, &window);
+    let mut imgui_sdl2 = opengl_imgui_hook_rs::ImguiSdl2::new(&mut imgui, &window);
 
     let renderer =
-        imgui_opengl_renderer::Renderer::new(&mut imgui, |s| gl_get_proc_address(s) as _);
+        imgui_opengl_renderer::Renderer::new(&mut imgui, |s| video.gl_get_proc_address(s) as _);
 
     let mut event_pump = sdl_context.event_pump().unwrap();
 
