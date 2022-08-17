@@ -1,12 +1,18 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use std::{
     ffi::{c_void, CString},
     ptr,
     time::Instant,
 };
-use windows::Win32::{
-    Foundation::{BOOL, HINSTANCE},
-    System::SystemServices::DLL_PROCESS_ATTACH,
+use windows::{
+    core::PCSTR,
+    Win32::{
+        Foundation::{GetLastError, BOOL, HINSTANCE},
+        System::{
+            LibraryLoader::{GetModuleHandleA, GetProcAddress},
+            SystemServices::DLL_PROCESS_ATTACH,
+        },
+    },
 };
 
 fn gl_get_proc_address(procname: &str) -> *const () {
@@ -37,8 +43,28 @@ pub extern "system" fn DllMain(
     }
 }
 
+fn get_module_library(
+    module: &str,
+    function: &str,
+) -> Result<unsafe extern "system" fn() -> isize> {
+    let module_cstring = CString::new(module).expect("module");
+    let function_cstring = CString::new(function).expect("function");
+
+    let h_instance = unsafe { GetModuleHandleA(PCSTR(module_cstring.as_ptr() as *mut _)) }?;
+
+    let func = unsafe { GetProcAddress(h_instance, PCSTR(function_cstring.as_ptr() as *mut _)) };
+
+    match func {
+        Some(func) => Ok(func),
+        None => Err(anyhow!(
+            "Failed GetProcAddress, GetLastError: {}",
+            unsafe { GetLastError() }.0
+        )),
+    }
+}
+
 fn main() -> Result<()> {
-    let mut imgui = imgui::Context::create();
+    /*let mut imgui = imgui::Context::create();
     imgui.set_ini_filename(None);
 
     let renderer =
@@ -59,5 +85,7 @@ fn main() -> Result<()> {
         renderer.render(ui);
 
         ::std::thread::sleep(::std::time::Duration::new(0, 1_000_000_000u32 / 60));
-    }
+    }*/
+
+    Ok(())
 }
