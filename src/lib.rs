@@ -2,15 +2,17 @@ use anyhow::{anyhow, Result};
 use detour::static_detour;
 use std::{
     ffi::{c_int, c_void, CString},
-    ptr,
-    time::Instant,
+    mem, ptr,
+    time::{Duration, Instant},
 };
 use windows::{
     core::PCSTR,
     Win32::{
         Foundation::{GetLastError, BOOL, HINSTANCE},
+        Graphics::Gdi::HDC,
         Security::Cryptography::BCRYPT_ALG_HANDLE,
         System::{
+            Console::AllocConsole,
             LibraryLoader::{GetModuleHandleA, GetProcAddress},
             SystemServices::DLL_PROCESS_ATTACH,
         },
@@ -45,6 +47,17 @@ pub extern "system" fn DllMain(
     }
 }
 
+fn create_debug_console() -> Result<()> {
+    if !unsafe { AllocConsole() }.as_bool() {
+        return Err(anyhow!(
+            "Failed allocating console, GetLastError: {}",
+            unsafe { GetLastError() }.0
+        ));
+    }
+
+    Ok(())
+}
+
 fn get_module_library(
     module: &str,
     function: &str,
@@ -66,16 +79,12 @@ fn get_module_library(
 }
 
 static_detour! {
-  pub static BCryptgenRandomHook: unsafe extern "system" fn(BCRYPT_ALG_HANDLE, *mut u8, u32, u32) -> c_int;
+  pub static OpenGl32wglSwapBuffers: unsafe extern "system" fn(HDC) -> ();
 }
 
-pub type FnOpenGl32wglSwapBuffers =
-    unsafe extern "system" fn(BCRYPT_ALG_HANDLE, *mut u8, u32, u32) -> ();
-
-fn main() -> Result<()> {
-    let x = get_module_library("opengl32.dll", "wglSwapBuffers");
-
-    //let y =
+#[allow(non_snake_case)]
+pub fn wglSwapBuffers_detour(dc: HDC) -> () {
+    println!("Called wglSwapBuffers");
 
     /*let mut imgui = imgui::Context::create();
     imgui.set_ini_filename(None);
@@ -99,6 +108,25 @@ fn main() -> Result<()> {
 
         ::std::thread::sleep(::std::time::Duration::new(0, 1_000_000_000u32 / 60));
     }*/
+
+    std::thread::sleep(Duration::from_millis(100));
+
+    unsafe { OpenGl32wglSwapBuffers.call(dc) }
+}
+
+pub type FnOpenGl32wglSwapBuffers = unsafe extern "system" fn(HDC) -> ();
+
+fn main() -> Result<()> {
+    create_debug_console()?;
+    println!("Created debug console");
+
+    let x = get_module_library("opengl32.dll", "wglSwapBuffers")?;
+    let y: FnOpenGl32wglSwapBuffers = unsafe { mem::transmute(x) };
+    unsafe { OpenGl32wglSwapBuffers.initialize(y, wglSwapBuffers_detour) }?;
+    println!("Initialized detour");
+
+    unsafe { OpenGl32wglSwapBuffers.enable() }?;
+    println!("Enabled detour");
 
     Ok(())
 }
