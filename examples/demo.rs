@@ -4,7 +4,21 @@ extern crate imgui_opengl_renderer;
 extern crate imgui_sdl2;
 extern crate sdl2;
 
-use std::time::Instant;
+use std::{ffi::CString, ptr, time::Instant};
+
+fn gl_get_proc_address(procname: &str) -> *const () {
+    // For reference on what we do here: https://github.com/Rebzzel/kiero/blob/master/kiero.cpp#L519
+    println!("Proc address: {}", procname);
+    match CString::new(procname) {
+        Ok(procname) => unsafe {
+            // TODO: Get proc address and retrieve ptr to the function
+            // sys::SDL_GL_GetProcAddress(procname.as_ptr() as *const c_char) as *const ()
+            ptr::null()
+        },
+        // string contains a nul byte - it won't match anything.
+        Err(_) => ptr::null(),
+    }
+}
 
 fn main() {
     let sdl_context = sdl2::init().unwrap();
@@ -36,7 +50,7 @@ fn main() {
     let mut imgui_sdl2 = imgui_sdl2::ImguiSdl2::new(&mut imgui, &window);
 
     let renderer =
-        imgui_opengl_renderer::Renderer::new(&mut imgui, |s| video.gl_get_proc_address(s) as _);
+        imgui_opengl_renderer::Renderer::new(&mut imgui, |s| gl_get_proc_address(s) as _);
 
     let mut event_pump = sdl_context.event_pump().unwrap();
 
