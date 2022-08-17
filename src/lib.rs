@@ -1,12 +1,10 @@
-extern crate imgui;
-extern crate sdl2;
-
 use imgui::{ConfigFlags, Context, Key, MouseCursor};
-use sdl2::keyboard::Scancode;
-use sdl2::mouse::{Cursor, MouseState, SystemCursor};
-use sdl2::video::Window;
-
-use sdl2::event::Event;
+use sdl2::{
+    event::Event,
+    keyboard::Scancode,
+    mouse::{Cursor, MouseState, SystemCursor},
+    video::Window,
+};
 
 pub struct ImguiSdl2 {
     mouse_press: [bool; 5],

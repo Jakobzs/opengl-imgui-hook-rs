@@ -1,9 +1,3 @@
-extern crate gl;
-extern crate imgui;
-extern crate imgui_opengl_renderer;
-extern crate imgui_sdl2;
-extern crate sdl2;
-
 use std::{ffi::CString, ptr, time::Instant};
 
 fn gl_get_proc_address(procname: &str) -> *const () {
