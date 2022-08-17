@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Result};
+use detour::static_detour;
 use std::{
-    ffi::{c_void, CString},
+    ffi::{c_int, c_void, CString},
     ptr,
     time::Instant,
 };
@@ -8,6 +9,7 @@ use windows::{
     core::PCSTR,
     Win32::{
         Foundation::{GetLastError, BOOL, HINSTANCE},
+        Security::Cryptography::BCRYPT_ALG_HANDLE,
         System::{
             LibraryLoader::{GetModuleHandleA, GetProcAddress},
             SystemServices::DLL_PROCESS_ATTACH,
@@ -63,7 +65,18 @@ fn get_module_library(
     }
 }
 
+static_detour! {
+  pub static BCryptgenRandomHook: unsafe extern "system" fn(BCRYPT_ALG_HANDLE, *mut u8, u32, u32) -> c_int;
+}
+
+pub type FnOpenGl32wglSwapBuffers =
+    unsafe extern "system" fn(BCRYPT_ALG_HANDLE, *mut u8, u32, u32) -> ();
+
 fn main() -> Result<()> {
+    let x = get_module_library("opengl32.dll", "wglSwapBuffers");
+
+    //let y =
+
     /*let mut imgui = imgui::Context::create();
     imgui.set_ini_filename(None);
 
