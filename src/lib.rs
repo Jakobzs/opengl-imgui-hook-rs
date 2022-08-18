@@ -10,7 +10,6 @@ use windows::{
     Win32::{
         Foundation::{GetLastError, BOOL, HINSTANCE},
         Graphics::Gdi::HDC,
-        Security::Cryptography::BCRYPT_ALG_HANDLE,
         System::{
             Console::AllocConsole,
             LibraryLoader::{GetModuleHandleA, GetProcAddress},
@@ -24,11 +23,11 @@ fn gl_get_proc_address(procname: &str) -> *const () {
     println!("Proc address: {}", procname);
     match CString::new(procname) {
         Ok(procname) => unsafe {
-            // TODO: Get proc address and retrieve ptr to the function
-            // sys::SDL_GL_GetProcAddress(procname.as_ptr() as *const c_char) as *const ()
+            // TODO: Get proc address from opengl32 and retrieve ptr to the function (if it exists)
+            // ORIG LINE: sys::SDL_GL_GetProcAddress(procname.as_ptr() as *const c_char) as *const ()
             ptr::null()
         },
-        // string contains a nul byte - it won't match anything.
+        // string contains a null byte - it won't match anything.
         Err(_) => ptr::null(),
     }
 }
