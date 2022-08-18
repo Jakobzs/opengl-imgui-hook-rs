@@ -22,9 +22,15 @@ fn gl_get_proc_address(procname: &str) -> *const () {
     // For reference on what we do here: https://github.com/Rebzzel/kiero/blob/master/kiero.cpp#L519
     println!("Proc address: {}", procname);
     match CString::new(procname) {
-        Ok(procname) => unsafe {
+        Ok(procnamer) => unsafe {
+            // Code here for the stuff
+            /*let proccc = get_module_library("opengl32.dll", procname).unwrap();
+            let awrewaraew = proccc as *const ();
+            awrewaraew*/
+
             // TODO: Get proc address from opengl32 and retrieve ptr to the function (if it exists)
             // ORIG LINE: sys::SDL_GL_GetProcAddress(procname.as_ptr() as *const c_char) as *const ()
+
             ptr::null()
         },
         // string contains a null byte - it won't match anything.
@@ -81,9 +87,14 @@ static_detour! {
   pub static OpenGl32wglSwapBuffers: unsafe extern "system" fn(HDC) -> ();
 }
 
+static mut INIT: bool = false;
+
 #[allow(non_snake_case)]
 pub fn wglSwapBuffers_detour(dc: HDC) -> () {
     println!("Called wglSwapBuffers");
+
+    println!("INIT: {}", unsafe { INIT });
+    unsafe { INIT = true };
 
     /*let mut imgui = imgui::Context::create();
     imgui.set_ini_filename(None);
