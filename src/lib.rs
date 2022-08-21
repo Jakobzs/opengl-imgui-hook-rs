@@ -93,8 +93,17 @@ static mut INIT: bool = false;
 pub fn wglSwapBuffers_detour(dc: HDC) -> () {
     println!("Called wglSwapBuffers");
 
+    if !unsafe { INIT } {
+        let mut imgui = imgui::Context::create();
+        imgui.set_ini_filename(None);
+
+        let renderer =
+            imgui_opengl_renderer::Renderer::new(&mut imgui, |s| gl_get_proc_address(s) as _);
+
+        unsafe { INIT = true };
+    }
+
     println!("INIT: {}", unsafe { INIT });
-    unsafe { INIT = true };
 
     /*let mut imgui = imgui::Context::create();
     imgui.set_ini_filename(None);
