@@ -20,19 +20,18 @@ use windows::{
 
 fn gl_get_proc_address(procname: &str) -> *const () {
     // For reference on what we do here: https://github.com/Rebzzel/kiero/blob/master/kiero.cpp#L519
+
+    // TODO:
+    // Wrap in the get_module_library func to here, so pretty much replace it. It is silly having two functions for it
     println!("Proc address: {}", procname);
     match CString::new(procname) {
-        Ok(procnamer) => unsafe {
-            // Code here for the stuff
-            /*let proccc = get_module_library("opengl32.dll", procname).unwrap();
-            let awrewaraew = proccc as *const ();
-            awrewaraew*/
-
-            // TODO: Get proc address from opengl32 and retrieve ptr to the function (if it exists)
-            // ORIG LINE: sys::SDL_GL_GetProcAddress(procname.as_ptr() as *const c_char) as *const ()
-
-            ptr::null()
-        },
+        Ok(procnamer) => {
+            let proc = match get_module_library("opengl32.dll", procname) {
+                Ok(p) => p as *const (),
+                Err(_) => ptr::null(),
+            };
+            proc
+        }
         // string contains a null byte - it won't match anything.
         Err(_) => ptr::null(),
     }
