@@ -98,9 +98,12 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
         let mut imgui = imgui::Context::create();
         imgui.set_ini_filename(None);
 
+        // Init the loader (grabbing the func required)
         gl_loader::init_gl();
-        let renderer =
-            imgui_opengl_renderer::Renderer::new(&mut imgui, |s| gl_get_proc_address(s) as _);
+        // Create the renderer
+        let renderer = imgui_opengl_renderer::Renderer::new(&mut imgui, |s| {
+            gl_loader::get_proc_address(s) as _
+        });
 
         unsafe { INIT = true };
     }
