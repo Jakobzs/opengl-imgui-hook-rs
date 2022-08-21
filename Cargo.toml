@@ -28,6 +28,5 @@ features = [
     "Win32_Graphics_Gdi",
 ]
 
-
 [patch.crates-io]
 mmap-fixed = { git = "https://github.com/khang06/rust-mmap-fixed-fixed.git", rev = "47116f5" }

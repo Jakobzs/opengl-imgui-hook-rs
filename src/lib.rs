@@ -23,10 +23,17 @@ fn gl_get_proc_address(procname: &str) -> *const () {
 
     println!("Proc address: {}", procname);
     match CString::new(procname) {
-        Ok(procnamer) => match get_module_library("opengl32.dll", procname) {
-            Ok(p) => p as *const (),
-            Err(_) => ptr::null(),
-        },
+        Ok(procnamer) => {
+            let aweqawe = gl_loader::get_proc_address(procname) as *const ();
+
+            if aweqawe == ptr::null() {
+                println!("Got a null here buddy");
+
+                loop {}
+            }
+
+            aweqawe
+        }
         // string contains a null byte - it won't match anything.
         Err(_) => ptr::null(),
     }
@@ -91,6 +98,7 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
         let mut imgui = imgui::Context::create();
         imgui.set_ini_filename(None);
 
+        gl_loader::init_gl();
         let renderer =
             imgui_opengl_renderer::Renderer::new(&mut imgui, |s| gl_get_proc_address(s) as _);
 
