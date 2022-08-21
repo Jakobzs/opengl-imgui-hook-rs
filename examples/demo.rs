@@ -1,17 +1,26 @@
-use std::{ffi::CString, ptr, time::Instant};
+use std::{
+    ffi::{c_char, CString},
+    ptr,
+    time::Instant,
+};
+
+use sdl2::sys;
 
 fn gl_get_proc_address(procname: &str) -> *const () {
     // For reference on what we do here: https://github.com/Rebzzel/kiero/blob/master/kiero.cpp#L519
     println!("Proc address: {}", procname);
-    match CString::new(procname) {
+    let func = match CString::new(procname) {
         Ok(procname) => unsafe {
             // TODO: Get proc address and retrieve ptr to the function
-            // sys::SDL_GL_GetProcAddress(procname.as_ptr() as *const c_char) as *const ()
-            ptr::null()
+            sys::SDL_GL_GetProcAddress(procname.as_ptr() as *const c_char) as *const ()
         },
         // string contains a nul byte - it won't match anything.
         Err(_) => ptr::null(),
+    };
+    if func == ptr::null() {
+        println!("PTR IS NULL");
     }
+    func
 }
 
 fn main() {
@@ -44,7 +53,7 @@ fn main() {
     let mut imgui_sdl2 = opengl_imgui_hook_rs::ImguiSdl2::new(&mut imgui, &window);
 
     let renderer =
-        imgui_opengl_renderer::Renderer::new(&mut imgui, |s| video.gl_get_proc_address(s) as _);
+        imgui_opengl_renderer::Renderer::new(&mut imgui, |s| gl_get_proc_address(s) as _);
 
     let mut event_pump = sdl_context.event_pump().unwrap();
 
