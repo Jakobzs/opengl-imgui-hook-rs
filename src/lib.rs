@@ -102,6 +102,9 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
         let mut imgui = imgui::Context::create();
         imgui.set_ini_filename(None);
 
+        imgui.style_mut().window_title_align = [0.5, 0.5];
+        imgui.io_mut().display_size = [1024.0, 1024.0];
+
         // Init the loader (grabbing the func required)
         gl_loader::init_gl();
         // Create the renderer
@@ -116,12 +119,12 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
     }
 
     if unsafe { INIT } {
-        let imgui = unsafe { &mut IMGUI };
-        let imgui2 = imgui.as_mut().unwrap();
-        let ui = imgui2.frame();
+        let imgui = unsafe { &mut IMGUI }.as_mut().unwrap();
+        let ui = imgui.frame();
         ui.show_demo_window(&mut true);
 
-        //unsafe { IMGUI_RENDERER.unwrap().render(ui) };
+        let rendererer = unsafe { &mut IMGUI_RENDERER }.as_mut().unwrap();
+        rendererer.render(ui);
     }
 
     println!("INIT: {}", unsafe { INIT });
@@ -148,8 +151,6 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
 
         ::std::thread::sleep(::std::time::Duration::new(0, 1_000_000_000u32 / 60));
     }*/
-
-    std::thread::sleep(Duration::from_millis(100));
 
     unsafe { OpenGl32wglSwapBuffers.call(dc) }
 }
