@@ -1,5 +1,7 @@
 use anyhow::{anyhow, Result};
 use detour::static_detour;
+use imgui::Context;
+use imgui_opengl_renderer::Renderer;
 use std::{
     ffi::{c_int, c_void, CString},
     mem, ptr,
@@ -89,6 +91,8 @@ static_detour! {
 }
 
 static mut INIT: bool = false;
+static mut IMGUI: Option<Context> = None;
+static mut IMGUI_RENDERER: Option<Renderer> = None;
 
 #[allow(non_snake_case)]
 pub fn wglSwapBuffers_detour(dc: HDC) -> () {
@@ -105,7 +109,19 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
             gl_loader::get_proc_address(s) as _
         });
 
+        unsafe { IMGUI = Some(imgui) };
+        unsafe { IMGUI_RENDERER = Some(renderer) };
+
         unsafe { INIT = true };
+    }
+
+    if unsafe { INIT } {
+        let imgui = unsafe { &mut IMGUI };
+        let imgui2 = imgui.as_mut().unwrap();
+        let ui = imgui2.frame();
+        ui.show_demo_window(&mut true);
+
+        //unsafe { IMGUI_RENDERER.unwrap().render(ui) };
     }
 
     println!("INIT: {}", unsafe { INIT });
