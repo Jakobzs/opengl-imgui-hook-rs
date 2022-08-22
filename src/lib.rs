@@ -207,6 +207,8 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
 
         imgui.style_mut().window_title_align = [0.5, 0.5];
         imgui.io_mut().display_size = [1000.0, 500.0];
+        imgui.io_mut().nav_active = true;
+        imgui.io_mut().nav_visible = true;
 
         // Init the loader (grabbing the func required)
         gl_loader::init_gl();
