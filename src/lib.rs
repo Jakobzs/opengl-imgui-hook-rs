@@ -174,7 +174,8 @@ fn imgui_wnd_proc_impl(
         .should_block_messages(imgui_renderer.io());
     drop(imgui_renderer);*/
 
-    unsafe { CallWindowProcW(ORIG_HWND, hwnd, umsg, WPARAM(wparam), LPARAM(lparam)) }
+    LRESULT(1)
+    //unsafe { CallWindowProcW(ORIG_HWND, hwnd, umsg, WPARAM(wparam), LPARAM(lparam)) }
 }
 
 #[allow(non_snake_case)]
