@@ -17,11 +17,11 @@ use windows::{
             SystemServices::DLL_PROCESS_ATTACH,
         },
         UI::WindowsAndMessaging::{
-            CallWindowProcW, SetWindowLongPtrW, GWLP_WNDPROC, WA_INACTIVE, WHEEL_DELTA,
-            WM_ACTIVATE, WM_CHAR, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDBLCLK, WM_LBUTTONDOWN,
-            WM_LBUTTONUP, WM_MBUTTONDBLCLK, WM_MBUTTONDOWN, WM_MBUTTONUP, WM_MOUSEHWHEEL,
-            WM_MOUSEWHEEL, WM_RBUTTONDBLCLK, WM_RBUTTONDOWN, WM_RBUTTONUP, WM_SYSKEYDOWN,
-            WM_SYSKEYUP, WM_XBUTTONDBLCLK, WM_XBUTTONDOWN, WM_XBUTTONUP, XBUTTON1,
+            CallWindowProcW, SetWindowLongPtrW, GWLP_WNDPROC, GWL_WNDPROC, WA_INACTIVE,
+            WHEEL_DELTA, WM_ACTIVATE, WM_CHAR, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDBLCLK,
+            WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MBUTTONDBLCLK, WM_MBUTTONDOWN, WM_MBUTTONUP,
+            WM_MOUSEHWHEEL, WM_MOUSEWHEEL, WM_RBUTTONDBLCLK, WM_RBUTTONDOWN, WM_RBUTTONUP,
+            WM_SYSKEYDOWN, WM_SYSKEYUP, WM_XBUTTONDBLCLK, WM_XBUTTONDOWN, WM_XBUTTONUP, XBUTTON1,
         },
     },
 };
@@ -104,6 +104,7 @@ fn imgui_wnd_proc_impl(
     LPARAM(lparam): LPARAM,
 ) -> LRESULT {
     let mut io = unsafe { IMGUI.as_mut().unwrap() }.io_mut();
+    println!("Got msg: {}", umsg);
     match umsg {
         WM_KEYDOWN | WM_SYSKEYDOWN => {
             if wparam < 256 {
@@ -197,7 +198,7 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
                 Option<unsafe extern "system" fn(HWND, u32, WPARAM, LPARAM) -> LRESULT>,
             >(SetWindowLongPtrW(
                 game_window,
-                GWLP_WNDPROC,
+                GWL_WNDPROC,
                 wndproc_hook as isize,
             ))
         };
