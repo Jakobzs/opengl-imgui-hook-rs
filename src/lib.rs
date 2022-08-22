@@ -17,10 +17,11 @@ use windows::{
             SystemServices::DLL_PROCESS_ATTACH,
         },
         UI::WindowsAndMessaging::{
-            CallWindowProcW, SetWindowLongPtrW, GWLP_WNDPROC, WA_INACTIVE, WHEEL_DELTA, WM_KEYDOWN,
-            WM_KEYUP, WM_LBUTTONDBLCLK, WM_LBUTTONDOWN, WM_MBUTTONDBLCLK, WM_MBUTTONDOWN,
-            WM_RBUTTONDBLCLK, WM_RBUTTONDOWN, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_XBUTTONDBLCLK,
-            WM_XBUTTONDOWN, XBUTTON1,
+            CallWindowProcW, SetWindowLongPtrW, GWLP_WNDPROC, WA_INACTIVE, WHEEL_DELTA,
+            WM_ACTIVATE, WM_CHAR, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDBLCLK, WM_LBUTTONDOWN,
+            WM_LBUTTONUP, WM_MBUTTONDBLCLK, WM_MBUTTONDOWN, WM_MBUTTONUP, WM_MOUSEHWHEEL,
+            WM_MOUSEWHEEL, WM_RBUTTONDBLCLK, WM_RBUTTONDOWN, WM_RBUTTONUP, WM_SYSKEYDOWN,
+            WM_SYSKEYUP, WM_XBUTTONDBLCLK, WM_XBUTTONDOWN, WM_XBUTTONUP, XBUTTON1,
         },
     },
 };
@@ -179,7 +180,8 @@ fn imgui_wnd_proc_impl(
 fn wndproc_hook(hWnd: HWND, uMsg: u32, wParam: WPARAM, lParam: LPARAM) -> LRESULT {
     //println!("Msg is: {}", uMsg);
 
-    unsafe { CallWindowProcW(ORIG_HWND, hWnd, uMsg, wParam, lParam) }
+    imgui_wnd_proc_impl(hWnd, uMsg, wParam, lParam)
+    //unsafe { CallWindowProcW(ORIG_HWND, hWnd, uMsg, wParam, lParam) }
 }
 
 #[allow(non_snake_case)]
