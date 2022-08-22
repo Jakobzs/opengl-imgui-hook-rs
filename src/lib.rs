@@ -3,43 +3,22 @@ use detour::static_detour;
 use imgui::Context;
 use imgui_opengl_renderer::Renderer;
 use std::{
-    ffi::{c_int, c_void, CString},
-    mem, ptr,
-    time::{Duration, Instant},
+    ffi::{c_void, CString},
+    mem,
 };
 use windows::{
     core::PCSTR,
     Win32::{
-        Foundation::{GetLastError, BOOL, HINSTANCE},
-        Graphics::Gdi::HDC,
+        Foundation::{GetLastError, BOOL, HINSTANCE, HWND, LPARAM, WPARAM},
+        Graphics::Gdi::{WindowFromDC, HDC},
         System::{
             Console::AllocConsole,
             LibraryLoader::{GetModuleHandleA, GetProcAddress},
             SystemServices::DLL_PROCESS_ATTACH,
         },
+        UI::WindowsAndMessaging::{SetWindowLongPtrA, SetWindowLongPtrW, WINDOW_LONG_PTR_INDEX},
     },
 };
-
-fn gl_get_proc_address(procname: &str) -> *const () {
-    // For reference on what we do here: https://github.com/Rebzzel/kiero/blob/master/kiero.cpp#L519
-
-    println!("Proc address: {}", procname);
-    match CString::new(procname) {
-        Ok(procnamer) => {
-            let aweqawe = gl_loader::get_proc_address(procname) as *const ();
-
-            if aweqawe == ptr::null() {
-                println!("Got a null here buddy");
-
-                loop {}
-            }
-
-            aweqawe
-        }
-        // string contains a null byte - it won't match anything.
-        Err(_) => ptr::null(),
-    }
-}
 
 #[no_mangle]
 #[allow(non_snake_case)]
@@ -94,11 +73,28 @@ static mut INIT: bool = false;
 static mut IMGUI: Option<Context> = None;
 static mut IMGUI_RENDERER: Option<Renderer> = None;
 
+fn wndproc_hook(hWnd: HWND, uMsg: u32, wParam: WPARAM, lParam: LPARAM) {
+    println!("Msg is: {}", uMsg);
+}
+
 #[allow(non_snake_case)]
 pub fn wglSwapBuffers_detour(dc: HDC) -> () {
-    println!("Called wglSwapBuffers");
+    //println!("Called wglSwapBuffers");
 
     if !unsafe { INIT } {
+        let game_window = unsafe { WindowFromDC(dc) };
+
+        let oWndProc = unsafe {
+            SetWindowLongPtrW(
+                game_window,
+                WINDOW_LONG_PTR_INDEX(-4),
+                wndproc_hook as isize,
+            )
+        };
+
+        //hGameWindowProc = (WNDPROC)SetWindowLongPtr(hGameWindow,
+        //   GWLP_WNDPROC, (LONG_PTR)windowProc_hook);
+
         let mut imgui = imgui::Context::create();
         imgui.set_ini_filename(None);
 
@@ -127,7 +123,7 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
         rendererer.render(ui);
     }
 
-    println!("INIT: {}", unsafe { INIT });
+    //println!("INIT: {}", unsafe { INIT });
 
     /*let mut imgui = imgui::Context::create();
     imgui.set_ini_filename(None);
