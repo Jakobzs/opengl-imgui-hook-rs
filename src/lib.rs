@@ -182,8 +182,12 @@ fn imgui_wnd_proc_impl(
 fn wndproc_hook(hWnd: HWND, uMsg: u32, wParam: WPARAM, lParam: LPARAM) -> LRESULT {
     //println!("Msg is: {}", uMsg);
 
-    imgui_wnd_proc_impl(hWnd, uMsg, wParam, lParam)
-    //unsafe { CallWindowProcW(ORIG_HWND, hWnd, uMsg, wParam, lParam) }
+    if imgui_wnd_proc_impl(hWnd, uMsg, wParam, lParam) == LRESULT(1) {
+        return LRESULT(1);
+    }
+
+    println!("SKIPPP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    unsafe { CallWindowProcW(ORIG_HWND, hWnd, uMsg, wParam, lParam) }
 }
 
 #[allow(non_snake_case)]
@@ -207,7 +211,7 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
         //hGameWindowProc = (WNDPROC)SetWindowLongPtr(hGameWindow,
         //   GWLP_WNDPROC, (LONG_PTR)windowProc_hook);
 
-        let mut imgui = imgui::Context::create();
+        let mut imgui = Context::create();
         imgui.set_ini_filename(None);
 
         imgui.style_mut().window_title_align = [0.5, 0.5];
