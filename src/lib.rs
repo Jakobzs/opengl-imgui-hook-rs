@@ -104,6 +104,8 @@ fn imgui_wnd_proc_impl(
     LPARAM(lparam): LPARAM,
 ) -> LRESULT {
     let mut io = unsafe { IMGUI.as_mut().unwrap() }.io_mut();
+    println!("Want capture mouse: {}", io.want_capture_mouse);
+
     println!("Got msg: {}", umsg);
     match umsg {
         WM_KEYDOWN | WM_SYSKEYDOWN => {
