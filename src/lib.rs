@@ -16,7 +16,12 @@ use windows::{
             LibraryLoader::{GetModuleHandleA, GetProcAddress},
             SystemServices::DLL_PROCESS_ATTACH,
         },
-        UI::WindowsAndMessaging::{CallWindowProcW, SetWindowLongPtrW, GWLP_WNDPROC},
+        UI::WindowsAndMessaging::{
+            CallWindowProcW, SetWindowLongPtrW, GWLP_WNDPROC, WA_INACTIVE, WHEEL_DELTA, WM_KEYDOWN,
+            WM_KEYUP, WM_LBUTTONDBLCLK, WM_LBUTTONDOWN, WM_MBUTTONDBLCLK, WM_MBUTTONDOWN,
+            WM_RBUTTONDBLCLK, WM_RBUTTONDOWN, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_XBUTTONDBLCLK,
+            WM_XBUTTONDOWN, XBUTTON1,
+        },
     },
 };
 
@@ -75,11 +80,106 @@ static mut IMGUI_RENDERER: Option<Renderer> = None;
 static mut ORIG_HWND: Option<unsafe extern "system" fn(HWND, u32, WPARAM, LPARAM) -> LRESULT> =
     None;
 
+fn loword(l: u32) -> u16 {
+    (l & 0xffff) as u16
+}
+
+fn hiword(l: u32) -> u16 {
+    ((l >> 16) & 0xffff) as u16
+}
+
+fn get_wheel_delta_wparam(wparam: u32) -> u16 {
+    hiword(wparam) as u16
+}
+
+fn get_xbutton_wparam(wparam: u32) -> u16 {
+    hiword(wparam)
+}
+
+fn imgui_wnd_proc_impl(
+    hwnd: HWND,
+    umsg: u32,
+    WPARAM(wparam): WPARAM,
+    LPARAM(lparam): LPARAM,
+) -> LRESULT {
+    let mut io = unsafe { IMGUI.as_mut().unwrap() }.io_mut();
+    match umsg {
+        WM_KEYDOWN | WM_SYSKEYDOWN => {
+            if wparam < 256 {
+                io.keys_down[wparam as usize] = true;
+            }
+        }
+        WM_KEYUP | WM_SYSKEYUP => {
+            if wparam < 256 {
+                io.keys_down[wparam as usize] = false;
+            }
+        }
+        WM_LBUTTONDOWN | WM_LBUTTONDBLCLK => {
+            io.mouse_down[0] = true;
+        }
+        WM_RBUTTONDOWN | WM_RBUTTONDBLCLK => {
+            io.mouse_down[1] = true;
+        }
+        WM_MBUTTONDOWN | WM_MBUTTONDBLCLK => {
+            io.mouse_down[2] = true;
+        }
+        WM_XBUTTONDOWN | WM_XBUTTONDBLCLK => {
+            let btn = if hiword(wparam as _) == XBUTTON1.0 as u16 {
+                3
+            } else {
+                4
+            };
+            io.mouse_down[btn] = true;
+        }
+        WM_LBUTTONUP => {
+            io.mouse_down[0] = false;
+        }
+        WM_RBUTTONUP => {
+            io.mouse_down[1] = false;
+        }
+        WM_MBUTTONUP => {
+            io.mouse_down[2] = false;
+        }
+        WM_XBUTTONUP => {
+            let btn = if hiword(wparam as _) == XBUTTON1.0 as u16 {
+                3
+            } else {
+                4
+            };
+            io.mouse_down[btn] = false;
+        }
+        WM_MOUSEWHEEL => {
+            let wheel_delta_wparam = get_wheel_delta_wparam(wparam as _);
+            let wheel_delta = WHEEL_DELTA as f32;
+            io.mouse_wheel += (wheel_delta_wparam as i16 as f32) / wheel_delta;
+        }
+        WM_MOUSEHWHEEL => {
+            let wheel_delta_wparam = get_wheel_delta_wparam(wparam as _);
+            let wheel_delta = WHEEL_DELTA as f32;
+            io.mouse_wheel_h += (wheel_delta_wparam as i16 as f32) / wheel_delta;
+        }
+        WM_CHAR => io.add_input_character(wparam as u8 as char),
+        WM_ACTIVATE => {
+            //*imgui_renderer.focus_mut() = loword(wparam as _) != WA_INACTIVE as u16;
+            return LRESULT(1);
+        }
+        _ => {}
+    };
+
+    /*let wnd_proc = imgui_renderer.wnd_proc();
+    let should_block_messages = imgui_render_loop
+        .as_ref()
+        .should_block_messages(imgui_renderer.io());
+    drop(imgui_renderer);*/
+
+    unsafe { CallWindowProcW(ORIG_HWND, hwnd, umsg, WPARAM(wparam), LPARAM(lparam)) }
+}
+
 #[allow(non_snake_case)]
-fn wndproc_hook(hWnd: HWND, uMsg: u32, wParam: WPARAM, lParam: LPARAM) {
+fn wndproc_hook(hWnd: HWND, uMsg: u32, wParam: WPARAM, lParam: LPARAM) -> LRESULT {
     //println!("Msg is: {}", uMsg);
 
-    unsafe { CallWindowProcW(ORIG_HWND, hWnd, uMsg, wParam, lParam) };
+    unsafe { CallWindowProcW(ORIG_HWND, hWnd, uMsg, wParam, lParam) }
 }
 
 #[allow(non_snake_case)]
