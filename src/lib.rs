@@ -159,6 +159,7 @@ fn imgui_wnd_proc_impl(
         }
         WM_CHAR => io.add_input_character(wparam as u8 as char),
         WM_ACTIVATE => {
+            println!("ACTIVATED!!!");
             //*imgui_renderer.focus_mut() = loword(wparam as _) != WA_INACTIVE as u16;
             return LRESULT(1);
         }
