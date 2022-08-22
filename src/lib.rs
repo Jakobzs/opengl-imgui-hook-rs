@@ -96,9 +96,8 @@ fn imgui_wnd_proc_impl(
     LPARAM(lparam): LPARAM,
 ) -> LRESULT {
     let mut io = unsafe { IMGUI.as_mut().unwrap() }.io_mut();
-    println!("Want capture mouse: {}", io.want_capture_mouse);
 
-    println!("Got msg: {}", umsg);
+    //println!("Got msg: {}", umsg);
     match umsg {
         WM_KEYDOWN | WM_SYSKEYDOWN => {
             if wparam < 256 {
@@ -111,6 +110,7 @@ fn imgui_wnd_proc_impl(
             }
         }
         WM_LBUTTONDOWN | WM_LBUTTONDBLCLK => {
+            println!("Mouse button down");
             io.mouse_down[0] = true;
         }
         WM_RBUTTONDOWN | WM_RBUTTONDBLCLK => {
@@ -202,21 +202,16 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
             ))
         };
 
-        //hGameWindowProc = (WNDPROC)SetWindowLongPtr(hGameWindow,
-        //   GWLP_WNDPROC, (LONG_PTR)windowProc_hook);
-
         let mut imgui = Context::create();
         imgui.set_ini_filename(None);
 
         imgui.style_mut().window_title_align = [0.5, 0.5];
-        imgui.io_mut().display_size = [1024.0, 1024.0];
+        imgui.io_mut().display_size = [1000.0, 500.0];
 
         // Init the loader (grabbing the func required)
         gl_loader::init_gl();
         // Create the renderer
-        let renderer = imgui_opengl_renderer::Renderer::new(&mut imgui, |s| {
-            gl_loader::get_proc_address(s) as _
-        });
+        let renderer = Renderer::new(&mut imgui, |s| gl_loader::get_proc_address(s) as _);
 
         unsafe { IMGUI = Some(imgui) };
         unsafe { IMGUI_RENDERER = Some(renderer) };
