@@ -16,7 +16,10 @@ use windows::{
             LibraryLoader::{GetModuleHandleA, GetProcAddress},
             SystemServices::DLL_PROCESS_ATTACH,
         },
-        UI::WindowsAndMessaging::{SetWindowLongPtrA, SetWindowLongPtrW, WINDOW_LONG_PTR_INDEX},
+        UI::WindowsAndMessaging::{
+            CallWindowProcW, SetWindowLongPtrA, SetWindowLongPtrW, GWLP_WNDPROC,
+            WINDOW_LONG_PTR_INDEX,
+        },
     },
 };
 
@@ -75,6 +78,8 @@ static mut IMGUI_RENDERER: Option<Renderer> = None;
 
 fn wndproc_hook(hWnd: HWND, uMsg: u32, wParam: WPARAM, lParam: LPARAM) {
     println!("Msg is: {}", uMsg);
+
+    //unsafe { CallWindowProcW(lpprevwndfunc, hWnd, uMsg, wParam, lParam) };
 }
 
 #[allow(non_snake_case)]
@@ -84,13 +89,8 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
     if !unsafe { INIT } {
         let game_window = unsafe { WindowFromDC(dc) };
 
-        let oWndProc = unsafe {
-            SetWindowLongPtrW(
-                game_window,
-                WINDOW_LONG_PTR_INDEX(-4),
-                wndproc_hook as isize,
-            )
-        };
+        let oWndProc =
+            unsafe { SetWindowLongPtrW(game_window, GWLP_WNDPROC, wndproc_hook as isize) };
 
         //hGameWindowProc = (WNDPROC)SetWindowLongPtr(hGameWindow,
         //   GWLP_WNDPROC, (LONG_PTR)windowProc_hook);
