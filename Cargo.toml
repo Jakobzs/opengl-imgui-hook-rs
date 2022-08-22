@@ -26,7 +26,8 @@ features = [
     "Win32_Networking_WinSock",
     "Win32_Security_Cryptography",
     "Win32_Graphics_Gdi",
-    "Win32_UI_WindowsAndMessaging"
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_UI_Input_KeyboardAndMouse"
 ]
 
 [patch.crates-io]

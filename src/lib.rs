@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use detour::static_detour;
-use imgui::Context;
+use imgui::{Context, Key};
 use imgui_opengl_renderer::Renderer;
 use std::{
     ffi::{c_void, CString},
@@ -16,12 +16,15 @@ use windows::{
             LibraryLoader::{GetModuleHandleA, GetProcAddress},
             SystemServices::DLL_PROCESS_ATTACH,
         },
-        UI::WindowsAndMessaging::{
-            CallWindowProcW, SetWindowLongPtrW, GWL_WNDPROC, WHEEL_DELTA, WM_ACTIVATE, WM_CHAR,
-            WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDBLCLK, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MBUTTONDBLCLK,
-            WM_MBUTTONDOWN, WM_MBUTTONUP, WM_MOUSEHWHEEL, WM_MOUSEWHEEL, WM_RBUTTONDBLCLK,
-            WM_RBUTTONDOWN, WM_RBUTTONUP, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_XBUTTONDBLCLK,
-            WM_XBUTTONDOWN, WM_XBUTTONUP, XBUTTON1,
+        UI::{
+            Input::KeyboardAndMouse::*,
+            WindowsAndMessaging::{
+                CallWindowProcW, SetWindowLongPtrW, GWL_WNDPROC, WHEEL_DELTA, WM_ACTIVATE, WM_CHAR,
+                WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDBLCLK, WM_LBUTTONDOWN, WM_LBUTTONUP,
+                WM_MBUTTONDBLCLK, WM_MBUTTONDOWN, WM_MBUTTONUP, WM_MOUSEHWHEEL, WM_MOUSEWHEEL,
+                WM_RBUTTONDBLCLK, WM_RBUTTONDOWN, WM_RBUTTONUP, WM_SYSKEYDOWN, WM_SYSKEYUP,
+                WM_XBUTTONDBLCLK, WM_XBUTTONDOWN, WM_XBUTTONUP, XBUTTON1,
+            },
         },
     },
 };
@@ -206,9 +209,33 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
         imgui.set_ini_filename(None);
 
         imgui.style_mut().window_title_align = [0.5, 0.5];
-        imgui.io_mut().display_size = [1000.0, 500.0];
-        imgui.io_mut().nav_active = true;
-        imgui.io_mut().nav_visible = true;
+        let mut io = imgui.io_mut();
+
+        io.display_size = [1000.0, 500.0];
+        io.nav_active = true;
+        io.nav_visible = true;
+
+        io[Key::Tab] = VK_TAB.0 as _;
+        io[Key::LeftArrow] = VK_LEFT.0 as _;
+        io[Key::RightArrow] = VK_RIGHT.0 as _;
+        io[Key::UpArrow] = VK_UP.0 as _;
+        io[Key::DownArrow] = VK_DOWN.0 as _;
+        io[Key::PageUp] = VK_PRIOR.0 as _;
+        io[Key::PageDown] = VK_NEXT.0 as _;
+        io[Key::Home] = VK_HOME.0 as _;
+        io[Key::End] = VK_END.0 as _;
+        io[Key::Insert] = VK_INSERT.0 as _;
+        io[Key::Delete] = VK_DELETE.0 as _;
+        io[Key::Backspace] = VK_BACK.0 as _;
+        io[Key::Space] = VK_SPACE.0 as _;
+        io[Key::Enter] = VK_RETURN.0 as _;
+        io[Key::Escape] = VK_ESCAPE.0 as _;
+        io[Key::A] = VK_A.0 as _;
+        io[Key::C] = VK_C.0 as _;
+        io[Key::V] = VK_V.0 as _;
+        io[Key::X] = VK_X.0 as _;
+        io[Key::Y] = VK_Y.0 as _;
+        io[Key::Z] = VK_Z.0 as _;
 
         // Init the loader (grabbing the func required)
         gl_loader::init_gl();
