@@ -17,11 +17,11 @@ use windows::{
             SystemServices::DLL_PROCESS_ATTACH,
         },
         UI::WindowsAndMessaging::{
-            CallWindowProcW, SetWindowLongPtrW, GWLP_WNDPROC, GWL_WNDPROC, WA_INACTIVE,
-            WHEEL_DELTA, WM_ACTIVATE, WM_CHAR, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDBLCLK,
-            WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MBUTTONDBLCLK, WM_MBUTTONDOWN, WM_MBUTTONUP,
-            WM_MOUSEHWHEEL, WM_MOUSEWHEEL, WM_RBUTTONDBLCLK, WM_RBUTTONDOWN, WM_RBUTTONUP,
-            WM_SYSKEYDOWN, WM_SYSKEYUP, WM_XBUTTONDBLCLK, WM_XBUTTONDOWN, WM_XBUTTONUP, XBUTTON1,
+            CallWindowProcW, SetWindowLongPtrW, GWL_WNDPROC, WHEEL_DELTA, WM_ACTIVATE, WM_CHAR,
+            WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDBLCLK, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MBUTTONDBLCLK,
+            WM_MBUTTONDOWN, WM_MBUTTONUP, WM_MOUSEHWHEEL, WM_MOUSEWHEEL, WM_RBUTTONDBLCLK,
+            WM_RBUTTONDOWN, WM_RBUTTONUP, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_XBUTTONDBLCLK,
+            WM_XBUTTONDOWN, WM_XBUTTONUP, XBUTTON1,
         },
     },
 };
@@ -81,20 +81,12 @@ static mut IMGUI_RENDERER: Option<Renderer> = None;
 static mut ORIG_HWND: Option<unsafe extern "system" fn(HWND, u32, WPARAM, LPARAM) -> LRESULT> =
     None;
 
-fn loword(l: u32) -> u16 {
-    (l & 0xffff) as u16
-}
-
 fn hiword(l: u32) -> u16 {
     ((l >> 16) & 0xffff) as u16
 }
 
 fn get_wheel_delta_wparam(wparam: u32) -> u16 {
     hiword(wparam) as u16
-}
-
-fn get_xbutton_wparam(wparam: u32) -> u16 {
-    hiword(wparam)
 }
 
 fn imgui_wnd_proc_impl(
@@ -240,31 +232,6 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
         let rendererer = unsafe { &mut IMGUI_RENDERER }.as_mut().unwrap();
         rendererer.render(ui);
     }
-
-    //println!("INIT: {}", unsafe { INIT });
-
-    /*let mut imgui = imgui::Context::create();
-    imgui.set_ini_filename(None);
-
-    let renderer =
-        imgui_opengl_renderer::Renderer::new(&mut imgui, |s| gl_get_proc_address(s) as _);
-
-    let mut last_frame = Instant::now();
-
-    loop {
-        let now = Instant::now();
-        let delta = now - last_frame;
-        let delta_s = delta.as_secs() as f32 + delta.subsec_nanos() as f32 / 1_000_000_000.0;
-        last_frame = now;
-        imgui.io_mut().delta_time = delta_s;
-
-        let ui = imgui.frame();
-        ui.show_demo_window(&mut true);
-
-        renderer.render(ui);
-
-        ::std::thread::sleep(::std::time::Duration::new(0, 1_000_000_000u32 / 60));
-    }*/
 
     unsafe { OpenGl32wglSwapBuffers.call(dc) }
 }
