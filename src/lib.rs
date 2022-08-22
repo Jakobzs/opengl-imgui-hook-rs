@@ -9,17 +9,14 @@ use std::{
 use windows::{
     core::PCSTR,
     Win32::{
-        Foundation::{GetLastError, BOOL, HINSTANCE, HWND, LPARAM, WPARAM},
+        Foundation::{GetLastError, BOOL, HINSTANCE, HWND, LPARAM, LRESULT, WPARAM},
         Graphics::Gdi::{WindowFromDC, HDC},
         System::{
             Console::AllocConsole,
             LibraryLoader::{GetModuleHandleA, GetProcAddress},
             SystemServices::DLL_PROCESS_ATTACH,
         },
-        UI::WindowsAndMessaging::{
-            CallWindowProcW, SetWindowLongPtrA, SetWindowLongPtrW, GWLP_WNDPROC,
-            WINDOW_LONG_PTR_INDEX,
-        },
+        UI::WindowsAndMessaging::{CallWindowProcW, SetWindowLongPtrW, GWLP_WNDPROC},
     },
 };
 
@@ -75,11 +72,14 @@ static_detour! {
 static mut INIT: bool = false;
 static mut IMGUI: Option<Context> = None;
 static mut IMGUI_RENDERER: Option<Renderer> = None;
+static mut ORIG_HWND: Option<unsafe extern "system" fn(HWND, u32, WPARAM, LPARAM) -> LRESULT> =
+    None;
 
+#[allow(non_snake_case)]
 fn wndproc_hook(hWnd: HWND, uMsg: u32, wParam: WPARAM, lParam: LPARAM) {
-    println!("Msg is: {}", uMsg);
+    //println!("Msg is: {}", uMsg);
 
-    //unsafe { CallWindowProcW(lpprevwndfunc, hWnd, uMsg, wParam, lParam) };
+    unsafe { CallWindowProcW(ORIG_HWND, hWnd, uMsg, wParam, lParam) };
 }
 
 #[allow(non_snake_case)]
@@ -89,8 +89,16 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
     if !unsafe { INIT } {
         let game_window = unsafe { WindowFromDC(dc) };
 
-        let oWndProc =
-            unsafe { SetWindowLongPtrW(game_window, GWLP_WNDPROC, wndproc_hook as isize) };
+        unsafe {
+            ORIG_HWND = mem::transmute::<
+                isize,
+                Option<unsafe extern "system" fn(HWND, u32, WPARAM, LPARAM) -> LRESULT>,
+            >(SetWindowLongPtrW(
+                game_window,
+                GWLP_WNDPROC,
+                wndproc_hook as isize,
+            ))
+        };
 
         //hGameWindowProc = (WNDPROC)SetWindowLongPtr(hGameWindow,
         //   GWLP_WNDPROC, (LONG_PTR)windowProc_hook);
