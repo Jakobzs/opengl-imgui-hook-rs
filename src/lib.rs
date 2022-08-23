@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use detour::static_detour;
-use imgui::{Context, Key};
+use imgui::{Condition, Context, Key, Window};
 use imgui_opengl_renderer::Renderer;
 use std::{
     ffi::{c_void, CString},
@@ -209,10 +209,10 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
         let mut imgui = Context::create();
         imgui.set_ini_filename(None);
 
-        imgui.style_mut().window_title_align = [0.5, 0.5];
+        //imgui.style_mut().window_title_align = [0.5, 0.5];
         let mut io = imgui.io_mut();
 
-        io.display_size = [1000.0, 500.0];
+        io.display_size = [600.0, 200.0];
         io.nav_active = true;
         io.nav_visible = true;
 
@@ -252,7 +252,20 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
     if unsafe { INIT } {
         let imgui = unsafe { &mut IMGUI }.as_mut().unwrap();
         let ui = imgui.frame();
-        ui.show_demo_window(&mut true);
+
+        Window::new("Hello world")
+            .size([300.0, 110.0], Condition::FirstUseEver)
+            .build(&ui, || {
+                ui.text("Hello world!");
+                ui.text("こんにちは世界！");
+                ui.text("This...is...imgui-rs!");
+                ui.separator();
+                let mouse_pos = ui.io().mouse_pos;
+                ui.text(format!(
+                    "Mouse Position: ({:.1},{:.1})",
+                    mouse_pos[0], mouse_pos[1]
+                ));
+            });
 
         let rendererer = unsafe { &mut IMGUI_RENDERER }.as_mut().unwrap();
         rendererer.render(ui);
