@@ -172,8 +172,8 @@ fn imgui_wnd_proc_impl(
         .should_block_messages(imgui_renderer.io());
     drop(imgui_renderer);*/
 
-    LRESULT(1)
-    //unsafe { CallWindowProcW(ORIG_HWND, hwnd, umsg, WPARAM(wparam), LPARAM(lparam)) }
+    //LRESULT(1)
+    unsafe { CallWindowProcW(ORIG_HWND, hwnd, umsg, WPARAM(wparam), LPARAM(lparam)) }
 }
 
 #[allow(non_snake_case)]
@@ -269,6 +269,10 @@ pub fn wglSwapBuffers_detour(dc: HDC) -> () {
 
         let rendererer = unsafe { &mut IMGUI_RENDERER }.as_mut().unwrap();
         rendererer.render(ui);
+
+        println!("Mouse pos 0: {}", imgui.io().mouse_pos[0]);
+        imgui.io_mut().mouse_pos[0] = 300.0;
+        imgui.io_mut().mouse_pos[1] = 110.0;
     }
 
     unsafe { OpenGl32wglSwapBuffers.call(dc) }
