@@ -1,8 +1,11 @@
+#![feature(once_cell)]
+
 use anyhow::{anyhow, Result};
 use detour::static_detour;
 use imgui::{Condition, Context, Key, Window};
 use imgui_opengl_renderer::Renderer;
 use std::{
+    cell::OnceCell,
     ffi::{c_void, CString},
     mem,
 };
